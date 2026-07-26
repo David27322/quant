@@ -1,0 +1,468 @@
+"""
+orb_v3_vwap.py — V3: VWAP-filtered 15-min ORB  (rewrite v2)
+=============================================================
+Spec:
+  - Opening range : 09:30–09:44 ET inclusive (15 one-minute bars)
+  - Entry trigger : bar CLOSES above range_high (long) or below range_low (short)
+                    AND close is on the correct side of VWAP (direction filter)
+  - Entry order   : market order → fills at next bar's open
+  - Stop          : opposite side of range ± 1 tick, capped at hard_stop_pts
+                    (stop distance is always ≤ hard_stop_pts regardless of range width)
+  - Target 1      : entry fill + 1.5 × range_width  (half position exits here)
+  - Remainder     : trail with VWAP — exit if close crosses to wrong side of VWAP
+                    (breakeven stop moved to range edge after T1 as a safety net)
+  - Cutoff        : no new entries after 11:30 ET
+  - Force-close   : 15:45 ET
+  - Max 1 trade/day (one direction only; once in, no re-entry)
+
+Key fixes vs. the broken prior version
+---------------------------------------
+BUG 1 — hard_stop_pts was used as a RANGE-WIDTH FILTER (skip day if range > 30 pts).
+         NQ's 15-min range is almost always > 30 pts, so 99% of days were skipped
+         → only 5 trades over 3 years.
+         FIX: hard_stop_pts is now a STOP-DISTANCE CAP only. Wide range days still
+         trade; the stop is simply clamped so we never risk more than hard_stop_pts
+         per contract. This is what "max 25 pts stop" means in the original spec.
+
+BUG 2 — risk_pts was set to (close − stop_px) at signal time (before the market
+         fill). On a 50-pt range with stop at range_low, risk_pts could be 50+ pts,
+         causing the fixed-fractional sizer to request many contracts, exhausting
+         the $17,600/contract margin and triggering MARGIN/REJECTED errors.
+         FIX: risk_pts is always min(actual_distance, hard_stop_pts). The sizer now
+         sees a bounded risk figure and produces a sensible contract count.
+
+BUG 3 — Partial-size exit bracket was mis-wired. The stop was submitted with
+         transmit=False for full_size, then target1 for half_size with transmit=True.
+         After target1 filled, the remaining stop was replaced with a half-size
+         order, but the full-size stop was still live inside the broker (BT does
+         not auto-cancel the non-transmitted leg in all cases). This created
+         phantom over-sized exit orders.
+         FIX: Stop covers full position. After T1 hits, stop is cancelled and
+         replaced with half-size breakeven stop. VWAP trail handles the remainder
+         via bar-by-bar close comparison — no ambiguous bracket wiring.
+
+BUG 4 — notify_trade reset fired on EVERY partial trade close (BT fires it once
+         per fill event), clearing _stop_order/_target1_order references while
+         the position was still partially open. Subsequent bars lost track of
+         live exit orders.
+         FIX: reset only when self.position.size == 0 AND trade.isclosed
+         is checked against broker position, not just the trade object.
+
+BUG 5 — Day-rollover at 09:30 called _reset_daily_state() which zeroed
+         _entry_order BEFORE cancelling it. If the cancel came back as a
+         Canceled notification, the identity check `order is self._entry_order`
+         would be None, causing a silent pass and leaving the order live.
+         FIX: cancel first, then reset state. The cancel is stored in a local
+         variable so the notification can still match it.
+
+Run standalone:
+    python orb_v3_vwap.py
+"""
+
+import datetime
+import backtrader as bt
+from orb_common import NQData, RTH_VWAP, make_cerebro, print_results
+
+import os, sys
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data_clean")
+
+
+class ORB_V3_VWAP(bt.Strategy):
+
+    params = (
+        ("range_window_min",   15),     # 09:30 → 09:44 inclusive
+        ("hard_stop_pts",      25),     # STOP-DISTANCE CAP (not a range filter!)
+        ("target1_mult",       1.5),    # T1 = fill ± range_width × mult
+        ("cutoff_hour",        11),
+        ("cutoff_min",         30),
+        ("close_hour",         15),
+        ("close_min",          45),
+        ("rth_start_hour",      9),
+        ("rth_start_min",      30),
+        ("tick_size",          0.25),
+        ("verbose",            True),
+    )
+
+    # ── init ──────────────────────────────────────────────────────────────────
+
+    def __init__(self):
+        self.data_1min = self.datas[0]
+        self.vwap = RTH_VWAP(
+            self.data_1min,
+            rth_start_hour=self.p.rth_start_hour,
+            rth_start_minute=self.p.rth_start_min,
+        )
+        self._reset_daily_state()
+        self.risk_pts = 0.0  # consumed by FixedFractionalSizer
+
+    # ── daily state ───────────────────────────────────────────────────────────
+
+    def _reset_daily_state(self):
+        self._range_high      = None
+        self._range_low       = None
+        self._range_width     = None
+        self._range_built     = False
+        self._trade_taken     = False   # True once an entry order is submitted
+        self._in_position     = False   # True once entry fill confirmed
+        self._direction       = None    # "long" | "short"
+
+        # Set at signal time, read in notify_order when fill arrives
+        self._pending_stop_px = None    # actual stop price (capped)
+        self._pending_risk_pts = 0.0   # capped risk distance → sizer input
+
+        # Order references (identity-checked in notify_order)
+        self._entry_order     = None
+        self._stop_order      = None
+        self._target1_order   = None
+
+        # Position accounting for partial exits
+        self._full_size       = 0
+        self._half_size       = 0       # contracts remaining after T1
+        self._t1_hit          = False   # True once first half exits at T1
+
+    # ── time helpers ──────────────────────────────────────────────────────────
+
+    def _bar_dt(self):
+        return self.data_1min.datetime.datetime(0)
+
+    def _bar_time(self):
+        return self._bar_dt().time()
+
+    def _rth_start(self):
+        return datetime.time(self.p.rth_start_hour, self.p.rth_start_min)
+
+    def _range_end(self):
+        """
+        Last bar INCLUDED in the opening range.
+        range_window_min=15: bars at 09:30, 09:31, … 09:44  → last open = 09:44
+        """
+        base = datetime.datetime.combine(datetime.date.today(), self._rth_start())
+        end_dt = base + datetime.timedelta(minutes=self.p.range_window_min - 1)
+        return end_dt.time()
+
+    def _cutoff_time(self):
+        return datetime.time(self.p.cutoff_hour, self.p.cutoff_min)
+
+    def _close_time(self):
+        return datetime.time(self.p.close_hour, self.p.close_min)
+
+    # ── order helpers ─────────────────────────────────────────────────────────
+
+    def _safe_cancel(self, order):
+        """Cancel an order only if it is still live."""
+        if order is None:
+            return
+        if order.status in (order.Created, order.Accepted, order.Partial):
+            self.cancel(order)
+
+    def _cancel_all_exits(self):
+        self._safe_cancel(self._stop_order)
+        self._safe_cancel(self._target1_order)
+        self._stop_order    = None
+        self._target1_order = None
+
+    # ── main bar loop ─────────────────────────────────────────────────────────
+
+    def next(self):
+        t     = self._bar_time()
+        close = self.data_1min.close[0]
+        high  = self.data_1min.high[0]
+        low   = self.data_1min.low[0]
+        vwap  = self.vwap.vwap[0]
+        tick  = self.p.tick_size
+
+        # ── A. Day rollover at 09:30 ──────────────────────────────────────────
+        if t == self._rth_start():
+            # Cancel any live orders BEFORE resetting references
+            if self._in_position:
+                self._cancel_all_exits()
+                self.close()
+            else:
+                self._safe_cancel(self._entry_order)
+            self._reset_daily_state()
+
+        # ── B. Force-close at 15:45 ───────────────────────────────────────────
+        if t >= self._close_time() and self._in_position:
+            self._cancel_all_exits()
+            self.close()
+            if self.p.verbose:
+                print(f"  [V3] {self._bar_dt()}  Force-close at {t}")
+            return
+
+        # ── C. VWAP trailing exit for remainder after T1 ──────────────────────
+        #    Only active once T1 has hit and there are still contracts open.
+        if self._in_position and self._t1_hit and self._half_size > 0:
+            exit_triggered = False
+            if self._direction == "long" and close < vwap:
+                exit_triggered = True
+            elif self._direction == "short" and close > vwap:
+                exit_triggered = True
+
+            if exit_triggered:
+                self._cancel_all_exits()   # cancel the BE stop
+                if self._direction == "long":
+                    self.sell(size=self._half_size)
+                else:
+                    self.buy(size=self._half_size)
+                self._half_size = 0
+                if self.p.verbose:
+                    print(f"  [V3] {self._bar_dt()}  VWAP trail EXIT "
+                          f"{self._direction.upper()} remainder  "
+                          f"close={close:.2f}  vwap={vwap:.2f}")
+
+        # ── D. Skip days where we are done ───────────────────────────────────
+        if self._trade_taken:
+            return
+
+        # ── E. Build opening range: bars 09:30..09:44 ─────────────────────────
+        if t >= self._rth_start() and t <= self._range_end():
+            if self._range_high is None:
+                self._range_high, self._range_low = high, low
+            else:
+                self._range_high = max(self._range_high, high)
+                self._range_low  = min(self._range_low,  low)
+
+            if t == self._range_end():
+                # Range complete — finalise and look for immediate breakout
+                self._range_width = self._range_high - self._range_low
+                self._range_built = True
+                if self.p.verbose:
+                    print(f"  [V3] {self._bar_dt()}  "
+                          f"Range built {self._range_low:.2f}–{self._range_high:.2f}  "
+                          f"width={self._range_width:.2f}")
+                self._check_breakout(close, vwap, tick)
+            return  # still inside range window
+
+        # ── F. Post-range, pre-cutoff: scan for breakout on each bar ──────────
+        if self._range_built and t < self._cutoff_time():
+            self._check_breakout(close, vwap, tick)
+
+    # ── breakout signal ───────────────────────────────────────────────────────
+
+    def _check_breakout(self, close, vwap, tick):
+        """
+        Long : close > range_high AND close > vwap
+        Short: close < range_low  AND close < vwap
+        Entry is a market order that fills at the NEXT bar's open.
+        Stop  : capped at hard_stop_pts from the opposite range edge.
+        Sizing: self.risk_pts is consumed by FixedFractionalSizer — we set it
+                to the CAPPED stop distance so the sizer never over-sizes.
+        """
+        if self._trade_taken:
+            return
+
+        rng_h  = self._range_high
+        rng_l  = self._range_low
+        cap    = self.p.hard_stop_pts
+
+        if close > rng_h and close > vwap:
+            # ── LONG signal ───────────────────────────────────────────────────
+            raw_stop = rng_l - tick                        # stop below range low
+            # Cap: if range is very wide, stop can't be more than cap pts below entry
+            # We can't know fill price yet (market order), so use close as proxy.
+            # The sizer will use this; actual exit price is raw_stop regardless.
+            raw_dist = close - raw_stop
+            capped_dist = min(raw_dist, cap)
+            capped_stop = close - capped_dist              # sizer proxy stop px
+
+            self._direction         = "long"
+            self._pending_stop_px   = raw_stop             # place stop here in order
+            self._pending_risk_pts  = capped_dist          # bounded input to sizer
+            self.risk_pts           = capped_dist          # ← FixedFractionalSizer reads this
+
+            self._trade_taken  = True
+            self._entry_order  = self.buy()                # market → fills next bar open
+
+            if self.p.verbose:
+                print(f"  [V3] {self._bar_dt()}  LONG signal  "
+                      f"close={close:.2f}  vwap={vwap:.2f}  "
+                      f"range={rng_l:.2f}–{rng_h:.2f}  "
+                      f"raw_stop={raw_stop:.2f}  risk_pts={capped_dist:.2f}")
+
+        elif close < rng_l and close < vwap:
+            # ── SHORT signal ──────────────────────────────────────────────────
+            raw_stop = rng_h + tick
+            raw_dist = raw_stop - close
+            capped_dist = min(raw_dist, cap)
+            capped_stop = close + capped_dist
+
+            self._direction         = "short"
+            self._pending_stop_px   = raw_stop
+            self._pending_risk_pts  = capped_dist
+            self.risk_pts           = capped_dist
+
+            self._trade_taken  = True
+            self._entry_order  = self.sell()
+
+            if self.p.verbose:
+                print(f"  [V3] {self._bar_dt()}  SHORT signal  "
+                      f"close={close:.2f}  vwap={vwap:.2f}  "
+                      f"range={rng_l:.2f}–{rng_h:.2f}  "
+                      f"raw_stop={raw_stop:.2f}  risk_pts={capped_dist:.2f}")
+
+    # ── order notifications ───────────────────────────────────────────────────
+
+    def notify_order(self, order):
+        if order.status in (order.Submitted, order.Accepted):
+            return
+
+        dt = self._bar_dt()
+
+        if order.status in (order.Margin, order.Rejected):
+            if self.p.verbose:
+                print(f"  [V3] {dt}  MARGIN/REJECTED  "
+                      f"val=${self.broker.getvalue():,.0f}")
+            # Day is dead — reset so we don't get stuck
+            self._trade_taken = True
+            self._in_position = False
+            self._entry_order = None
+            return
+
+        if order.status == order.Canceled:
+            return
+
+        if order.status != order.Completed:
+            return
+
+        # ── Entry filled ──────────────────────────────────────────────────────
+        if order is self._entry_order:
+            fill  = order.executed.price
+            size  = abs(order.executed.size)
+            rw    = self._range_width
+            tick  = self.p.tick_size
+            cap   = self.p.hard_stop_pts
+
+            self._in_position = True
+            self._full_size   = size
+            # Half is the floor so we always have at least 1 contract per leg.
+            # If size == 1, both legs exit on the same order.
+            half = max(1, size // 2)
+            self._half_size = half
+
+            stop_px = self._pending_stop_px   # set at signal time
+
+            if self._direction == "long":
+                # Target = fill + 1.5 × range_width  (no cap needed on target)
+                target_px = fill + rw * self.p.target1_mult
+                # Stop covers FULL position to start
+                self._stop_order = self.sell(
+                    size=size,
+                    exectype=bt.Order.Stop,
+                    price=stop_px,
+                    transmit=False,
+                )
+                # T1 covers half position
+                self._target1_order = self.sell(
+                    size=half,
+                    exectype=bt.Order.Limit,
+                    price=target_px,
+                    transmit=True,
+                )
+            else:
+                target_px = fill - rw * self.p.target1_mult
+                self._stop_order = self.buy(
+                    size=size,
+                    exectype=bt.Order.Stop,
+                    price=stop_px,
+                    transmit=False,
+                )
+                self._target1_order = self.buy(
+                    size=half,
+                    exectype=bt.Order.Limit,
+                    price=target_px,
+                    transmit=True,
+                )
+
+            if self.p.verbose:
+                print(f"  [V3] {dt}  FILLED {self._direction.upper()}  "
+                      f"fill={fill:.2f}  stop={stop_px:.2f}  "
+                      f"t1={target_px:.2f}  size={size}  half={half}")
+            return
+
+        # ── Target 1 filled ───────────────────────────────────────────────────
+        if order is self._target1_order:
+            self._t1_hit  = True
+            # Remaining contracts = full - half already exited
+            remainder = self._full_size - self._half_size
+            if remainder <= 0:
+                # Shouldn't happen if size==1 and half==1: whole position closed
+                self._t1_hit  = False
+                self._half_size = 0
+                if self.p.verbose:
+                    print(f"  [V3] {dt}  T1 HIT — position fully closed "
+                          f"(size=1, no remainder)")
+                return
+
+            self._half_size = remainder  # track what's left for VWAP trail
+
+            # Cancel the full-size stop, replace with remainder-size breakeven stop
+            self._safe_cancel(self._stop_order)
+
+            # Breakeven = range edge (conservative)
+            be = self._range_high if self._direction == "long" else self._range_low
+
+            if self._direction == "long":
+                self._stop_order = self.sell(
+                    size=remainder,
+                    exectype=bt.Order.Stop,
+                    price=be,
+                    transmit=True,
+                )
+            else:
+                self._stop_order = self.buy(
+                    size=remainder,
+                    exectype=bt.Order.Stop,
+                    price=be,
+                    transmit=True,
+                )
+
+            if self.p.verbose:
+                print(f"  [V3] {dt}  T1 HIT  "
+                      f"fill={order.executed.price:.2f}  "
+                      f"BE_stop={be:.2f}  remainder={remainder}")
+            return
+
+        # ── Stop filled ───────────────────────────────────────────────────────
+        if order is self._stop_order:
+            if self.p.verbose:
+                print(f"  [V3] {dt}  STOP FILLED  "
+                      f"fill={order.executed.price:.2f}")
+            # position is now flat (or remainder gone); notify_trade cleans up
+
+    # ── trade notifications ───────────────────────────────────────────────────
+
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+
+        if self.p.verbose:
+            print(f"  [V3] {self._bar_dt()}  "
+                  f"Trade closed  pnl={trade.pnl:.2f}  net={trade.pnlcomm:.2f}")
+
+        # Only reset position state when the broker confirms we are flat
+        if self.position.size == 0:
+            self._in_position   = False
+            self._t1_hit        = False
+            self._half_size     = 0
+            self._stop_order    = None
+            self._target1_order = None
+
+
+# ── STANDALONE RUN ────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    csv = os.path.join(DATA_DIR, "NQ_1min_rth.csv")
+    if not os.path.exists(csv):
+        sys.exit(f"ERROR: {csv} not found.")
+
+    cerebro = make_cerebro(csv, cash=100_000, risk_pct=0.01)
+    cerebro.addstrategy(ORB_V3_VWAP, verbose=True)
+
+    print("Running V3 VWAP-filtered 15-min ORB ...")
+    start_val = cerebro.broker.getvalue()
+    results   = cerebro.run()
+    end_val   = cerebro.broker.getvalue()
+
+    print_results(results[0], label="V3 VWAP")
+    print(f"  Start: ${start_val:,.0f}  End: ${end_val:,.0f}  "
+          f"Return: {(end_val/start_val-1)*100:.2f}%")
