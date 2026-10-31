@@ -60,6 +60,8 @@ I started auditing different aspects of the research, including trading-session 
 
 During this process, I discovered and corrected a serious 10× contract-value mistake. I also began developing the actual trading and logging code, worked through compilation issues, and audited order handling and restart safety.
 
+I also started looking beyond the strategy itself and examined how prop-firm rules and constraints could become variables in optimization. Their structure can create asymmetric ways of monetizing an existing edge, meaning the challenge and funded phases may require different approaches to R:R, win rate, and position sizing. I also mathematically explored dynamic profit reinvestment, optimal portfolio scaling, and risk diversification to reduce the risk of blowing up the overall portfolio.
+
 I even tried a 14-day trial of the trading platform. Later, I successfully compiled the revised bot with **zero errors and zero warnings**. However, there was another problem: the free trial did not permit Expert Advisors (EAs).
 
 This forced me to reconsider the execution approach, and the plan shifted towards manual execution.
