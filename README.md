@@ -74,7 +74,7 @@ I decided to drop FHM for the time being.
 
 ### Phase 5 – Starting Over and Expanding the Research Process
 
-In Phase 5, I started again with a more important question: **Could I actually find something worth risking real money on?**
+In Phase 5, I started again, but with better guardrails to prevent biases & overfitting, clear testing rules and pass/fail criteria. It was a a much more disciplined research framework. 
 
 What followed became a much larger research and engineering project.
 
@@ -86,9 +86,9 @@ I then expanded the testing process considerably.
 
 Instead of relying on ordinary backtest results, I introduced more realistic transaction-cost modelling, doubled and tripled cost stress tests, thousands of reshuffled trading paths, delayed-entry scenarios, missed-trade simulations, noisy-price tests, and checks across different years and market conditions.
 
-The objective was to understand how fragile each strategy was and whether its apparent edge could survive conditions that were less favourable than the original backtest.
+The objective was to understand how fragile each strategy was and whether its apparent edge could survive conditions that were less favourable than the original backtest. None qualified.
 
-But something else started bothering me. Almost everything I tested was getting rejected. At some point, I had to question whether the strategies were genuinely poor or whether my testing and selection process had become excessively demanding.
+Something else started bothering me. Almost everything I tested was getting rejected. At some point, I had to question whether the strategies were genuinely poor or whether my testing and selection process had become excessively demanding.
 
 So, I started auditing the research process itself.
 
