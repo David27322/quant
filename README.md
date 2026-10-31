@@ -3,7 +3,7 @@
 
 ### Phase 1 – Getting Started with Quantitative Trading
 
-I started with the basics. In Phase 1, I fetched five years of EUR/USD daily price data using `yfinance` and built my first custom trading strategy: a 10/50 Simple Moving Average (SMA) crossover.
+I started with the basics. Before, I had explored & learned about technical ana In Phase 1, I fetched five years of EUR/USD daily price data using `yfinance` and built my first custom trading strategy: a 10/50 Simple Moving Average (SMA) crossover.
 
 I implemented the backtesting logic myself, calculated the performance metrics, and generated visualizations to understand how the strategy behaved. The initial results were encouraging. The strategy returned **+6.87%**, compared to **−8.50% for buy-and-hold** over the same period.
 
@@ -21,7 +21,7 @@ This phase exposed me to several important aspects of quantitative research, par
 
 Eventually, I decided that the overall approach was still too basic and relied on too many assumptions to justify risking real money on it.
 
-These first two phases were primarily learning exercises. Alongside the practical work, I was also studying quantitative finance and gradually learning the terminology, concepts, and mathematical foundations involved in finance and data science.
+These first two phases were primarily learning exercises. Alongside the practical work, I was also studying quantitative finance and gradually learning the terminology, concepts, and mathematical foundations involved in finance and data science. A book that got me started is, "Quantitative Trading: How to build your own algorithmic trading business" (2nd ed., 2009) by Ernest P. Chan.
 
 ### Phase 3 – Moving to Futures and More Serious Strategy Research
 
@@ -40,9 +40,9 @@ The results were quite interesting, but they also demonstrated why raw profitabi
 
 After the ORB experiments, I moved on to another strategy: First-Hour Momentum (FHM).
 
-This involved another extensive round of backtesting, random-signal comparisons, year-by-year performance checks, and position-sizing experiments. One encouraging observation was that every full year from 2021 through 2025 was profitable, and all five chronological folds I tested were positive as well.
+This involved another extensive round of backtesting, random-signal comparisons, year-by-year performance checks, and position-sizing experiments. I used Duckascopy to get cleaned 5.5 years of NDX100 1-min data. 
 
-Importantly, I did not perform parameter optimization for this strategy.
+One encouraging observation was that every full year from 2021 through 2025 was profitable, and all five chronological folds I tested were positive as well. Importantly, I did not perform parameter optimization for this strategy.
 
 However, the results weren't entirely convincing. The integrated robustness gate failed when using an assumed transaction cost of three points. At a lower assumed cost of two points, the strategy showed an expectancy of **+0.072R per trade** and a **Profit Factor of 1.12**.
 
@@ -124,18 +124,16 @@ The bottleneck might not have been a lack of good strategy ideas or poor impleme
 
 In other words, I couldn't simply keep testing strategies until something passed every filter. With limited historical observations and a very small underlying edge, the research process could become so demanding that even genuine opportunities would rarely be detected.
 
-This was the point where I decided to stop the project.
+This was the point where I had to stop the project.
 
-Continuing to run more strategy trials under those conditions would no longer represent meaningful quantitative research. It would increasingly resemble gambling: repeatedly searching through strategies without having enough statistical power to distinguish genuine opportunities from noise.
+Continuing to run more strategy trials under those conditions would no longer represent meaningful quantitative research. It would increasingly resemble gambling.
 
 There was one final question I wanted to investigate before closing this direction.
 
-I considered whether switching instruments could make a difference. In particular, I looked at EUR/USD again to see whether it offered any verified, material feasibility advantage over the futures market.
+I considered whether switching instruments could make a difference. In particular, I looked at EUR/USD again to see whether it offered any verified, material feasibility advantage over the NDX100/US100 CFD market.
 
 However, screening EUR/USD did not demonstrate any such advantage.
 
 So, changing the symbol wasn't a solution. The exhausted research budget and underlying statistical limitations didn't disappear simply because I switched markets.
-
-**For now, there is no reason to switch to EUR/USD, and no strategy has been approved for deployment.**
 
 <img width="1920" height="1200" alt="Image" src="https://github.com/user-attachments/assets/35cea96e-c6b0-4ba1-a760-7b8cc39a8cde" />
