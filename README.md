@@ -1,18 +1,141 @@
 # Journey
-In **Phase 1**, I fetched 5 years of EUR/USD daily data using yfinance, developed a custom SMA crossover trading strategy (10/50 SMA) with detailed backtesting metrics and visualizations. It hit +6.87% vs buy-and-hold of -8.50%, then intentionally broke it with 5/20 MAs to get 39 trades at -0.74%. And finally partitioned the dataset into an In-Sample (2020–2024) training period and a sealed Out-of-Sample (2025–2026) testing period.  
+# My Retail Quant Research Journey
 
-In **Phase 2**, I developed and optimized an RSI mean reversion strategy (finding the best parameters to be a 7-period RSI with 25/75 thresholds), validated its statistical significance with a Monte Carlo permutation test, verified its out-of-sample performance, implemented a fixed fractional sizing model, and conducted an expanding-window walk-forward analysis. Then decided that the approach is too basic and assumption-heavy.
-These were just learning phase. I was also learning Quantitave finance (e-book link or pdf link) and terms & concepts in finance & data science parallely.
+### Phase 1 – Getting Started with Quantitative Trading
 
-By **Phase 3** (extending from phase 3.0 to phase 3.10), I had Installed Backtrader and got a Kaggle NQ futures dataset (i.e. cleaned 3 years of NQ 1-min data (1.05M bars, 765 RTH days)). Then I picked three documented ORB variants and coded them in Backtrader, swept 50-200+ parameter combinations, then filtered through bootstrap significance tests and a 70/30 walk-forward.  Here, V1 and V4 ran well (763 and 748 trades, +92% and +222%) but with 60-67% drawdowns that make them untrustworthy for now, while V3 was broken (5 trades, 385% drawdown).
-Then came First-Hour Momentum (FHM): another strategy, another round of backtests, random-signal comparisons, year-by-year checks and risk-sizing experiments. Every full year from 2021–2025 was positive, as were all five tested chronological folds. No parameter optimization was done. The integrated robustness gate failed (at 3-point assumed cost). At an assumed 2-point cost, expectancy was +0.072R/trade, with PF 1.12.  2026 performance was negative (−14.75R at an assumed 2-point round-trip cost). Then I paused for few months.
+I started with the basics. In Phase 1, I fetched five years of EUR/USD daily price data using `yfinance` and built my first custom trading strategy: a 10/50 Simple Moving Average (SMA) crossover.
 
-By **Phase 4**, this had grown into over five years of minute data, 552,092 price bars and 1,412 historical trades. I checked timing, holidays, shortened trading days, price gaps and different trading-cost assumptions. One audit alone covered 453 simulation cases and roughly 3.08 million simulated paths. I then corrected a 10× contract-value mistake, built trading and logging code, fixed compilation issues, then audited order handling and restart safety. I tried a 14-day trial, later compiled the revised bot with zero errors and warnings, and then discovered that the free trial prohibited EAs. So the plan shifted toward manual execution. Even the clocks needed checking. I later examined over 2.2 million paired BID/ASK quotes, but those still weren’t synchronized fill records. Finally, I had to acknowledge the painfully thin edge, worrying evidence, and terrible 2026 performance and therefore I dropped the FHM for then.
+I implemented the backtesting logic myself, calculated the performance metrics, and generated visualizations to understand how the strategy behaved. The initial results were encouraging. The strategy returned **+6.87%**, compared to **−8.50% for buy-and-hold** over the same period.
 
-In **Phase 5**, I started again, trying to find something genuinely worth risking money on. Since then, this has turned into a whole research-and-engineering project. I’ve worked through at least 20 strategy trials, covering opening breakouts, late-session momentum, opening-gap reversals and month-end effects. I audited 5.5 years of minute data—534,450 price bars across 1,375 trading sessions—corrected holiday and early-close handling, and removed 17,642 bars outside the intended trading hours. Then came realistic-cost modelling, doubled and tripled cost stresses, thousands of reshuffled trading paths, delayed entries, missed trades, noisy prices, and checks across different years and market conditions. And when everything kept getting rejected, I questioned the testing process itself. Over a million synthetic test cases went into checking the selection maths and trial-count effects—not finding imaginary profits. One setup caught genuine planted edges in only 4.51% of simulated rounds, raising a real concern about overly demanding tests. Later, a genuine arithmetic bug was found and repaired: 443 regression checks passed, and 38,472 saved order/scenario records were replayed. Twelve exit timings changed—but no material profit result did. The honest result so far is substantial completed work, documented failures, and no strategy yet qualified for deployment.
+However, rather than simply accepting those results, I wanted to see how sensitive the strategy was to its parameters. So, I deliberately changed the moving averages from 10/50 to 5/20. This produced 39 trades and a return of **−0.74%**. It was a useful way to see how easily results could change with different parameter choices.
 
-In **Phase 6**, something caught my attention: A test that catches planted edges only 4.51% of the time. Maybe its a search for perfection that doesn't exist in live markets. So, I engineered a synthetic meta-test across 1,354+ sessions, proving that even a simplified selector yields just 5.5% detection power for sparse +0.10 R net edges (and maxes out at 35.3% over 10 years of data), telling us that our bottleneck wasn't bad strategy ideas, but severe statistical sample-length constraints. This threshold forced me to stop this project, because running another strategy trial would no longer be quantitative research, but pure gambling.
-Even though, changing the symbol does not reset the exhausted research budget, I decided to check if EURUSD has a verified, material feasibility advantage. But screening EURUSD did not demonstrate any advantage. so, no switch for now.
+Finally, I divided the dataset into two separate periods: an In-Sample (IS) training period covering 2020–2024 and a sealed Out-of-Sample (OOS) testing period covering 2025–2026. The idea was to keep the OOS data untouched during strategy development and avoid using future information to influence the research.
 
+### Phase 2 – RSI Mean Reversion and Statistical Testing
+
+In Phase 2, I moved on to an RSI-based mean reversion strategy. I experimented with different parameters and eventually found that a **7-period RSI with 25/75 thresholds** produced the best results among the configurations I tested.
+
+But I didn't want to rely on backtest profitability alone. I started looking into whether the observed results had any statistical significance. To investigate this, I implemented a Monte Carlo permutation test, checked the strategy's out-of-sample performance, introduced a fixed fractional position-sizing model, and conducted an expanding-window walk-forward analysis.
+
+This phase exposed me to several important aspects of quantitative research, particularly the need to distinguish between a strategy that looks profitable in a backtest and one that has evidence of a genuine edge.
+
+Eventually, I decided that the overall approach was still too basic and relied on too many assumptions to justify risking real money on it.
+
+These first two phases were primarily learning exercises. Alongside the practical work, I was also studying quantitative finance and gradually learning the terminology, concepts, and mathematical foundations involved in finance and data science.
+
+### Phase 3 – Moving to Futures and More Serious Strategy Research
+
+Phase 3 was considerably larger. It eventually extended from Phase 3.0 through Phase 3.10.
+
+I installed Backtrader as my backtesting framework and obtained a Kaggle NQ (Nasdaq-100 E-mini futures) dataset containing three years of cleaned one-minute data. The dataset consisted of approximately **1.05 million bars and 765 Regular Trading Hours (RTH) sessions**.
+
+I started with three documented Opening Range Breakout (ORB) strategy variants and implemented them in Backtrader. I then conducted extensive parameter sweeps, testing anywhere from 50 to more than 200 parameter combinations. The results were subsequently filtered through bootstrap significance tests and a 70/30 walk-forward evaluation.
+
+The results were quite interesting, but they also demonstrated why raw profitability isn't enough.
+
+- **V1:** 763 trades and +92% return.
+- **V4:** 748 trades and +222% return.
+- Both strategies, however, suffered from approximately 60–67% drawdowns, making their results far too risky and unreliable to trust at that stage.
+- **V3:** Essentially broken, producing only five trades and a 385% drawdown.
+
+After the ORB experiments, I moved on to another strategy: First-Hour Momentum (FHM).
+
+This involved another extensive round of backtesting, random-signal comparisons, year-by-year performance checks, and position-sizing experiments. One encouraging observation was that every full year from 2021 through 2025 was profitable, and all five chronological folds I tested were positive as well.
+
+Importantly, I did not perform parameter optimization for this strategy.
+
+However, the results weren't entirely convincing. The integrated robustness gate failed when using an assumed transaction cost of three points. At a lower assumed cost of two points, the strategy showed an expectancy of **+0.072R per trade** and a **Profit Factor of 1.12**.
+
+The biggest concern was 2026. Its performance was negative, with a loss of **−14.75R**, even at the assumed two-point round-trip transaction cost.
+
+Eventually, I paused the research for a few months.
+
+### Phase 4 – Execution Engineering, Data Auditing and Reality Checks
+
+By Phase 4, the project had grown considerably. I was now working with more than five years of minute-level data, approximately **552,092 price bars and 1,412 historical trades**.
+
+At this point, the focus wasn't just on whether a strategy could make money in a backtest. I also needed to understand whether the underlying data, assumptions, and execution process were reliable.
+
+I started auditing different aspects of the research, including trading-session timings, holidays, shortened trading days, price gaps, and alternative transaction-cost assumptions. One of the audits alone covered **453 simulation cases and approximately 3.08 million simulated paths**.
+
+During this process, I discovered and corrected a serious 10× contract-value mistake. I also began developing the actual trading and logging code, worked through compilation issues, and audited order handling and restart safety.
+
+I even tried a 14-day trial of the trading platform. Later, I successfully compiled the revised bot with **zero errors and zero warnings**. However, there was another problem: the free trial did not permit Expert Advisors (EAs).
+
+This forced me to reconsider the execution approach, and the plan shifted towards manual execution.
+
+I also realized that timing accuracy needed its own investigation. I checked the clocks and eventually examined more than **2.2 million paired BID/ASK quotes** to understand the available execution data.
+
+However, these quotes were not synchronized execution or fill records. They could help examine market pricing and potential execution conditions, but they couldn't establish what actual fills would have looked like.
+
+By the end of this phase, I had to confront the uncomfortable reality: the FHM strategy had a very thin edge, there was worrying evidence in the results, and its 2026 performance was terrible.
+
+I decided to drop FHM for the time being.
+
+### Phase 5 – Starting Over and Expanding the Research Process
+
+In Phase 5, I started again with a more important question: **Could I actually find something worth risking real money on?**
+
+What followed became a much larger research and engineering project.
+
+I worked through at least **20 strategy trials**, exploring different market behaviours and trading ideas. These included opening breakouts, late-session momentum, opening-gap reversals, and month-end effects.
+
+The data itself also needed more work. I audited approximately **5.5 years of minute-level data**, covering 534,450 price bars across 1,375 trading sessions. During the audit, I corrected holiday and early-close handling and removed **17,642 bars** that fell outside the intended trading hours.
+
+I then expanded the testing process considerably.
+
+Instead of relying on ordinary backtest results, I introduced more realistic transaction-cost modelling, doubled and tripled cost stress tests, thousands of reshuffled trading paths, delayed-entry scenarios, missed-trade simulations, noisy-price tests, and checks across different years and market conditions.
+
+The objective was to understand how fragile each strategy was and whether its apparent edge could survive conditions that were less favourable than the original backtest.
+
+But something else started bothering me. Almost everything I tested was getting rejected. At some point, I had to question whether the strategies were genuinely poor or whether my testing and selection process had become excessively demanding.
+
+So, I started auditing the research process itself.
+
+I ran more than **one million synthetic test cases**, specifically to investigate the selection mathematics and the effects of testing multiple strategies. The purpose wasn't to generate imaginary profits or manufacture a successful strategy. It was to understand whether the statistical filters were behaving as intended.
+
+One particular setup detected genuinely planted edges in only **4.51% of simulated rounds**. That raised a serious concern: perhaps the testing process was rejecting too much, even when an edge was actually present.
+
+Later, I also discovered a genuine arithmetic bug in the research code and corrected it. After the correction, **443 regression checks passed**, and I replayed **38,472 saved order and scenario records** to verify the results.
+
+The correction changed 12 exit timings, but it didn't materially change the profitability results.
+
+By this point, the amount of work completed was substantial. I had tested numerous strategies, investigated execution assumptions, audited the data, stress-tested the results, and even examined the correctness of the statistical selection process itself.
+
+But the honest conclusion remained the same: despite all that work, **I still had no strategy that qualified for deployment.**
+
+### Phase 6 – Questioning the Statistical Limits of the Entire Research Process
+
+Phase 6 came from one observation that I couldn't ignore: a testing process that detected planted edges in only **4.51% of simulated rounds**.
+
+I started wondering whether I was pursuing a level of statistical certainty that simply wasn't realistic in live financial markets, particularly with the amount of historical data available to me.
+
+Instead of running yet another strategy trial, I decided to investigate the problem at a deeper level.
+
+I engineered a synthetic meta-test covering more than **1,354 trading sessions**. The objective was to understand the statistical detection power of the strategy-selection process itself.
+
+The results were quite revealing.
+
+Even a simplified selector achieved only **5.5% detection power for sparse +0.10R net edges**. Furthermore, its detection power reached only **35.3% even when using 10 years of data**.
+
+This changed how I viewed the entire project.
+
+The bottleneck might not have been a lack of good strategy ideas or poor implementation. Instead, the available sample length and the statistical limitations of detecting small trading edges were becoming the dominant constraints.
+
+In other words, I couldn't simply keep testing strategies until something passed every filter. With limited historical observations and a very small underlying edge, the research process could become so demanding that even genuine opportunities would rarely be detected.
+
+This was the point where I decided to stop the project.
+
+Continuing to run more strategy trials under those conditions would no longer represent meaningful quantitative research. It would increasingly resemble gambling: repeatedly searching through strategies without having enough statistical power to distinguish genuine opportunities from noise.
+
+There was one final question I wanted to investigate before closing this direction.
+
+I considered whether switching instruments could make a difference. In particular, I looked at EUR/USD again to see whether it offered any verified, material feasibility advantage over the futures market.
+
+However, screening EUR/USD did not demonstrate any such advantage.
+
+So, changing the symbol wasn't a solution. The exhausted research budget and underlying statistical limitations didn't disappear simply because I switched markets.
+
+**For now, there is no reason to switch to EUR/USD, and no strategy has been approved for deployment.**
 
 <img width="1920" height="1200" alt="Image" src="https://github.com/user-attachments/assets/35cea96e-c6b0-4ba1-a760-7b8cc39a8cde" />
