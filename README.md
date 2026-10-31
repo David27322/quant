@@ -3,7 +3,7 @@
 
 ### Phase 1 – Getting Started with Quantitative Trading
 
-I started with the basics. Before, I had explored & learned about technical ana In Phase 1, I fetched five years of EUR/USD daily price data using `yfinance` and built my first custom trading strategy: a 10/50 Simple Moving Average (SMA) crossover.
+I started with the basics (Before, I had explored discretionary trading and learned about technical analysis). In Phase 1, I fetched five years of EUR/USD daily price data using `yfinance` and built my first custom trading strategy: a 10/50 Simple Moving Average (SMA) crossover.
 
 I implemented the backtesting logic myself, calculated the performance metrics, and generated visualizations to understand how the strategy behaved. The initial results were encouraging. The strategy returned **+6.87%**, compared to **−8.50% for buy-and-hold** over the same period.
 
