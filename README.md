@@ -38,7 +38,7 @@ The results were quite interesting, but they also demonstrated why raw profitabi
 - Both strategies, however, suffered from approximately 60–67% drawdowns, making their results far too risky and unreliable to trust at that stage.
 - **V3:** Essentially broken, producing only five trades and a 385% drawdown.
 
-After the ORB experiments, I moved on to another strategy: First-Hour Momentum (FHM).
+After the failure of ORB experiments, I moved on to another strategy: First-Hour Momentum (FHM). 
 
 This involved another extensive round of backtesting, random-signal comparisons, year-by-year performance checks, and position-sizing experiments. I used Duckascopy to get cleaned 5.5 years of NDX100 1-min data. 
 
