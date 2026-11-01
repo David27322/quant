@@ -40,7 +40,7 @@ The results were quite interesting, but they also demonstrated why raw profitabi
 
 After the failure of ORB experiments, I moved on to another strategy: First-Hour Momentum (FHM). 
 
-This involved another extensive round of backtesting, random-signal comparisons, year-by-year performance checks, and position-sizing experiments. I used Duckascopy to get cleaned 5.5 years of NDX100 1-min data. 
+This involved another extensive round of backtesting, random-signal comparisons, year-by-year performance checks, and position-sizing experiments. I used Duckascopy to get cleaned 5.5 years of US100 1-min data. 
 
 One encouraging observation was that every full year from 2021 through 2025 was profitable, and all five chronological folds I tested were positive as well. Importantly, I did not perform parameter optimization for this strategy.
 
@@ -76,7 +76,7 @@ I decided to drop FHM for the time being.
 
 ### Phase 5 – Starting Over and Expanding the Research Process
 
-In Phase 5, I started again, but with better guardrails to prevent biases & overfitting, clear testing rules and pass/fail criteria. It was a a much more disciplined research framework. 
+In Phase 5, I started again, but with better guardrails to prevent biases & overfitting, clear testing rules and pass/fail criteria. It was a much more disciplined research framework. 
 
 What followed became a much larger research and engineering project.
 
