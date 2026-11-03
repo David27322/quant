@@ -1,0 +1,38 @@
+{
+  "scope": "Original baseline only; cost assumption 1 point, timestamps interpreted unchanged",
+  "rows": 552092,
+  "first_timestamp": "2021-01-04 09:30:00",
+  "last_timestamp": "2026-06-25 16:00:00",
+  "duplicate_timestamps": 0,
+  "missing_values": 0,
+  "bad_ohlc": 0,
+  "nonpositive_prices": 0,
+  "weekend_rows": 0,
+  "outside_0930_1600_rows": 0,
+  "timing_issue_counts": {
+    "next_bar_not_1031": 0,
+    "missing_1555": 0,
+    "missing_open_or_signal": 0
+  },
+  "timing_issue_examples": {
+    "next_bar_not_1031": [],
+    "missing_1555": [],
+    "missing_open_or_signal": []
+  },
+  "baseline": {
+    "n": 1412,
+    "win": 0.3909348441926346,
+    "avg_R": 0.09645233711048136,
+    "total_R": 136.19069999999968,
+    "sharpe": 1.095873411680834,
+    "pf": 1.1596435322078193
+  },
+  "exit_counts": {
+    "stop": 819,
+    "target": 473,
+    "eod": 120
+  },
+  "independent_total_R_check": 136.1906999999997,
+  "original_gate2_pass": true,
+  "original_gate3_rerun": false
+}

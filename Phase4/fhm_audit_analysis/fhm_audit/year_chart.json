@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "form": "categorical-bars",
+  "orientation": "vertical",
+  "mode": "grouped",
+  "title": "The available 2026 sample is negative",
+  "aside": "Mean net R per trade \u00b7 assumed2pt cost \u00b7 exit/gap proxies \u00b7 2026:124 trades throughJune25; not confirmed decay",
+  "labels": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+    "2026 YTD"
+  ],
+  "axis": {
+    "zero": true
+  },
+  "series": [
+    {
+      "label": "Mean net R/trade",
+      "valueKind": "number",
+      "role": "subject",
+      "data": [
+        0.05336627906976669,
+        0.03866666666666641,
+        0.056822070312500375,
+        0.13749527027026964,
+        0.16426663424124444,
+        -0.11894758064516196
+      ],
+      "derived": true,
+      "derivationReason": "Net bid-proxy points after assumed 2pt cost, divided by40pt nominal stop; arithmetic mean within year."
+    }
+  ],
+  "colorMap": {
+    "2021": "green",
+    "2022": "green",
+    "2023": "green",
+    "2024": "green",
+    "2025": "green",
+    "2026 YTD": "red"
+  }
+}

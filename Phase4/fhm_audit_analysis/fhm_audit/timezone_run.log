@@ -1,0 +1,23 @@
+{
+  "scope": "2023 only; source UTC interpretation supplied by user",
+  "source_sha256": "155c4ef755c2f4a14daaf3774d1f20e245f57ef0e5bcd0fb99a88d6b5f352e70",
+  "source_rows": 525600,
+  "source_duplicate_timestamps": 0,
+  "raw_utc_minute_intervals_all_60_seconds": true,
+  "rebuilt_rows": 100096,
+  "master_2023_rows": 100096,
+  "rebuilt_only_rows": 0,
+  "master_only_rows": 0,
+  "different_OHLC_rows": 0,
+  "max_absolute_price_difference": 0.0,
+  "exact_match": true,
+  "example_winter": {
+    "utc": "2023-01-03 14:30",
+    "ny": "2023-01-03 09:30:00-05:00"
+  },
+  "example_summer": {
+    "utc": "2023-07-05 13:30",
+    "ny": "2023-07-05 09:30:00-04:00"
+  },
+  "other_years_independently_verified": false
+}

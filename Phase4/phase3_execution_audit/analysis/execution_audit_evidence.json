@@ -1,0 +1,20 @@
+{
+  "assumptions": [
+    "NY minute-start labels, not independently verified against raw ticks",
+    "Original 1-point additive round-trip cost remains unmeasured",
+    "Ideal fixed stop/target fills and original stop-first tie policy",
+    "15:55 open is a bid-price proxy, not the actual EA's fill",
+    "MAE bounds are ideal bid-model bounds; ask, fees, gaps not modeled"
+  ],
+  "baseline_reconstruction_matches_original": true,
+  "trades": 1412,
+  "original_total_R": 136.19069999999968,
+  "1555_open_proxy_total_R": 139.94474999999952,
+  "delta_total_R": 3.754049999999825,
+  "changed_trade_outcomes": 85,
+  "original_stop_gap_flags": 5,
+  "original_both_levels_in_exit_bar": 0,
+  "original_profitable_entry_bar_exits": 1,
+  "quick_strike_status": "Sub-minute duration cannot be verified using M1 OHLC",
+  "firm_equity_pass_simulation_run": false
+}

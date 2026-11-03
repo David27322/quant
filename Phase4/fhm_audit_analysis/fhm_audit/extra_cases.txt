@@ -1,0 +1,16 @@
+extra_l03_d8_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.03 0.08 5 2520 20000 555000 1
+extra_l03_d8_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.03 0.08 60 2520 20000 555001 1
+extra_l03_d10_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.03 0.1 5 2520 20000 555002 1
+extra_l03_d10_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.03 0.1 60 2520 20000 555003 1
+extra_l06_d8_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.06 0.08 5 2520 20000 555004 1
+extra_l06_d8_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.06 0.08 60 2520 20000 555005 1
+extra_l06_d10_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.06 0.1 5 2520 20000 555006 1
+extra_l06_d10_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.06 0.1 60 2520 20000 555007 1
+extra_l08_d8_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.08 0.08 5 2520 20000 555008 1
+extra_l08_d8_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.08 0.08 60 2520 20000 555009 1
+extra_l08_d10_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.08 0.1 5 2520 20000 555010 1
+extra_l08_d10_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.08 0.1 60 2520 20000 555011 1
+extra_l09_d8_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.09 0.08 5 2520 20000 555012 1
+extra_l09_d8_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.09 0.08 60 2520 20000 555013 1
+extra_l09_d10_b5 /data/analysis/fhm_audit/pool_primary.txt 2 0.09 0.1 5 2520 20000 555014 1
+extra_l09_d10_b60 /data/analysis/fhm_audit/pool_primary.txt 2 0.09 0.1 60 2520 20000 555015 1

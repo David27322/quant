@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "form": "multiline",
+  "title": "Modeled odds change with lot size and resampling method",
+  "aside": "Fixed lot on horizontal axis \u00b7 2pt assumed cost \u00b7 8%/10% static loss allowance \u00b7 target/loss model only, not full compliance",
+  "labels": [
+    "0.02",
+    "0.03",
+    "0.04",
+    "0.05",
+    "0.06",
+    "0.08",
+    "0.09",
+    "0.12"
+  ],
+  "axis": {
+    "zero": true
+  },
+  "series": [
+    {
+      "label": "8% allowance \u00b7 IID",
+      "valueKind": "percent",
+      "role": "subject",
+      "data": [
+        93.595,
+        86.44500000000001,
+        77.49000000000001,
+        69.76,
+        64.01,
+        56.155,
+        53.92,
+        46.43
+      ],
+      "derived": true,
+      "derivationReason": "Monte Carlo success count divided by simulated path count; conditional target/loss model."
+    },
+    {
+      "label": "8% allowance \u00b7 20-trade blocks",
+      "valueKind": "percent",
+      "role": "aux",
+      "data": [
+        97.02,
+        93.4,
+        86.50999999999999,
+        78.78500000000001,
+        73.3,
+        64.48,
+        60.995,
+        53.32
+      ],
+      "derived": true,
+      "derivationReason": "Monte Carlo success count divided by simulated path count; conditional target/loss model."
+    },
+    {
+      "label": "10% allowance \u00b7 IID",
+      "valueKind": "percent",
+      "role": "aux",
+      "data": [
+        95.895,
+        92.585,
+        85.39,
+        79.345,
+        73.61999999999999,
+        65.23,
+        62.370000000000005,
+        55.165
+      ],
+      "derived": true,
+      "derivationReason": "Monte Carlo success count divided by simulated path count; conditional target/loss model."
+    },
+    {
+      "label": "10% allowance \u00b7 20-trade blocks",
+      "valueKind": "percent",
+      "role": "aux",
+      "data": [
+        97.665,
+        96.92,
+        92.15,
+        87.535,
+        81.85,
+        73.715,
+        71.095,
+        63.11
+      ],
+      "derived": true,
+      "derivationReason": "Monte Carlo success count divided by simulated path count; conditional target/loss model."
+    }
+  ],
+  "colorMap": {
+    "8% allowance \u00b7 IID": "blue",
+    "8% allowance \u00b7 20-trade blocks": "teal",
+    "10% allowance \u00b7 IID": "orange",
+    "10% allowance \u00b7 20-trade blocks": "purple"
+  }
+}

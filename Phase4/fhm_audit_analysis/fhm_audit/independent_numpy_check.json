@@ -1,0 +1,8 @@
+{
+  "engine": "Independent NumPy path simulation, separate RNG",
+  "scenario": "IID, lot0.08, cost2pt, static10%, MAE upper,2520 total opportunities",
+  "n": 20000,
+  "p_pass": 0.65875,
+  "unfinished": 0,
+  "successful_median_opportunities": 111.0
+}
