@@ -1,7 +1,5 @@
 # Phase 3 — AI Strategy Factory (NQ Futures)
 
-> **How to use this doc:** Paste this whole file into a new session, say which Step you're on, and attach any relevant code/data/results. The "Model" line in each step tells you which AI to use for that step.
-
 ## Context
 
 - **Goal:** Independent, profitable algo trading. Near-term — find a real edge, pass a futures prop firm challenge (Topstep/Apex, NQ or MNQ), get funded and sustain. Long-term (Phase 4+) — adaptive multi-strategy, agentic signal/risk/execution layers, diversification.
@@ -16,16 +14,6 @@
 - Discard any variant with under ~100 trades — not enough sample to judge.
 - Nothing reaches Step 8 unless it survives Step 6 **and** Step 7.
 
-## Model Roster & Allocation
-
-| Model | Role |
-|---|---|
-| **Opus 4.8** | Highest-stakes judgment — combination-grid robustness review, walk-forward go/no-go, final strategy + risk-sizing pick |
-| **Opus 4.7** | Extraction (turn vague video/book rules into unambiguous specs); designing what the combination grid should actually test |
-| **Sonnet 4.6 (max thinking)** | Harder debugging — look-ahead bias, data leakage, indicator warm-up issues; walk-forward harness logic |
-| **Sonnet 4.6 (high)** | Default coding workhorse — write Backtrader strategies, run optimization sweeps, routine fixes |
-| **GPT-5.5** | Data cleaning/alignment of the Kaggle dataset; all statistical math (Sharpe/Calmar/Sortino/DD, bootstrap significance) |
-| **Gemini 3.1 Pro** | Synthesizing multiple long strategy sources into one comparison; organizing final grid results into a clean table |
 
 ## Step-by-Step Plan
 
