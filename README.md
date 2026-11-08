@@ -138,4 +138,6 @@ However, screening EUR/USD did not demonstrate any such advantage.
 
 So, changing the symbol wasn't a solution. The exhausted research budget and underlying statistical limitations didn't disappear simply because I switched markets.
 
+After this, I revisited the most promising Nasdaq strategy and tested it on older data, but it failed under our frozen assumptions. I then explored other markets and ideas, looking for a better fit rather than forcing a result. A yen strategy produced an inconclusive result, while other leads ran into problems with costs, limited evidence, account rules or unreliable data. Most recently, I developed a currency-basket idea, but gathering suitable historical data proved harder than expected.
+
 <img width="1920" height="1200" alt="Image" src="https://github.com/user-attachments/assets/35cea96e-c6b0-4ba1-a760-7b8cc39a8cde" />
