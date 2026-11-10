@@ -1,4 +1,3 @@
-# Journey
 # My Retail Quant Research Journey
 
 ### Phase 1 – Getting Started with Quantitative Trading
@@ -138,6 +137,13 @@ However, screening EUR/USD did not demonstrate any such advantage.
 
 So, changing the symbol wasn't a solution. The exhausted research budget and underlying statistical limitations didn't disappear simply because I switched markets.
 
-After this, I revisited the most promising Nasdaq strategy and tested it on older data, but it failed under our frozen assumptions. I then explored other markets and ideas, looking for a better fit rather than forcing a result. A yen strategy produced an inconclusive result, while other leads ran into problems with costs, limited evidence, account rules or unreliable data. Most recently, I developed a currency-basket idea, but gathering suitable historical data proved harder than expected.
+After this, I revisited the most promising Nasdaq strategy and tested it on older data, but it failed under our frozen assumptions. I then explored other markets and ideas, firstly doing a feasibility review before contaminating the test data. A yen strategy produced an inconclusive result, while other leads ran into problems with costs, limited evidence, account rules or unreliable data.
+
+# What interests me about quantitative finance:
+For me, the lucrative career was catchy. In my early days, I saw cool movies, and the stories of ex-quants; I was flabbergasted by it all. Also, all my interests and my goal seemed to meet at being a trader (in firms or as a retail); as I was interested in math, AI/ML, and the complexity of numbers. 
+
+The challenge of finding, rigorous testing, adapting to market shifts, and optimal scaling of portfolio with diversified risk; is what keeps me hooked. 
+
+I see markets as a reflection of the economy, politics, and human behaviour. I find it fascinating to understand the psychology and sentiment driving price movements, while exploring the math and mechanisms underlying market behaviour.
 
 <img width="1920" height="1200" alt="Image" src="https://github.com/user-attachments/assets/35cea96e-c6b0-4ba1-a760-7b8cc39a8cde" />
